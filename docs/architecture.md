@@ -1,0 +1,3 @@
+# Architecture and trust boundaries
+
+Explicit local reviewed template → file inspection → exclusive destination reservation → copy filtered files → metadata customization → structural verification. No GitHub token or network access. Template content is not executed. A local template may contain secrets with arbitrary filenames; inspect it before use. Symlink checks assume no concurrent hostile modification of the source tree. Validation checks structure only. No remote publishing or full compliance assurance.
