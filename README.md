@@ -14,3 +14,7 @@ node src/cli.mjs validate ../evalOps
 The initializer copies an explicitly selected local template, customizes project metadata and README, excludes Git metadata, dependency/build directories and local secrets, rejects symlinks and existing destinations, and performs no remote writes. Review generated source before committing. It does not rename every website component, install packages, create GitHub repos, publish Wikis or configure Pages yet. Validation is a structural baseline, not a security or release certification.
 
 Branding: registered project names automatically select their own palette. Unregistered names receive a unique palette ID marked `pending-registration`; register their actual light/dark tokens in ops-ui and synchronize the template before release. The preview fallback is not an approved project identity. Use a template revision containing the palette registry.
+
+## Preview and generated branding
+
+Append `--dry-run` to init for a read-only manifest of files, planned changes and branding status. The actual init generates deterministic SVG favicon and wordmark plus project-specific HTML title, description and Open Graph title/description for supported website templates. Unknown projects use provisional Universe colors and remain pending registration. No canonical URL or social image URL is guessed. Review the manifest and generated assets before publishing.
