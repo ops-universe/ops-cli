@@ -10,8 +10,11 @@ export function validateName(name) {
 async function inspect(path) {
   const stat = await lstat(path);
   if (stat.isSymbolicLink()) throw new Error('Symlink refused: '+path);
-  if (stat.isDirectory()) for (const name of await readdir(path)) if (!skip(name)) await inspect(join(path,name));
-  else if (!stat.isFile()) throw new Error('Unsupported file: '+path);
+  if (stat.isDirectory()) {
+    for (const name of await readdir(path)) {
+      if (!skip(name)) await inspect(join(path,name));
+    }
+  } else if (!stat.isFile()) throw new Error('Unsupported file: '+path);
 }
 export async function validate(dir) {
   const missing=[];
