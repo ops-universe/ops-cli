@@ -13,7 +13,7 @@ try{
  const preview=await plan(options);assert.equal(preview.palette,'evalops');await assert.rejects(stat(dest),{code:'ENOENT'});
  await init(options);const result=await audit(dest);console.log(JSON.stringify(result,null,2));assert.equal(result.ok,true);
  run(dest,['ci']);run(dest,['test']);
- const web=join(dest,'website-react');run(web,['install','--no-audit','--no-fund']);run(web,['run','build'],{VITE_BASE_PATH:'/evalOps/'});
+ const web=join(dest,'website-react');run(web,['ci']);run(web,['audit','--audit-level=high']);run(web,['run','build'],{VITE_BASE_PATH:'/evalOps/'});
  const html=await readFile(join(web,'dist/index.html'),'utf8');assert.match(html,/<title>evalOps \| Ops Universe<\/title>/);assert.match(html,/\/evalOps\/assets\//);assert.match(await readFile(join(web,'dist/favicon.svg'),'utf8'),/#8dbbff/);
  console.log('End-to-end scaffold verified: evalOps, registered palette, root tests, branded website build.');
 }finally{await rm(root,{recursive:true,force:true});}
