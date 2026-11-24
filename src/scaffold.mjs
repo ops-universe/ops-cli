@@ -1,5 +1,6 @@
 import {cp, lstat, readdir, readFile, writeFile, mkdir, rm, realpath} from 'node:fs/promises';
 import {resolve, join, relative, isAbsolute, dirname} from 'node:path';
+import {selectPalette} from './palette.mjs';
 const excluded = new Set(['.git','node_modules','dist','coverage','.DS_Store']);
 const skip = name => excluded.has(name) || (name === '.env' || (name.startsWith('.env.') && name !== '.env.example'));
 export const required = ['README.md','AGENTS.md','ROADMAP.md','LICENSE','package.json','.ops/project.json','.github/workflows/ci.yml'];
@@ -43,13 +44,13 @@ export async function init({name,template,dest}) {
     }
     const metaPath=join(actualTarget,'.ops/project.json');
     const meta=JSON.parse(await readFile(metaPath,'utf8'));
-    await writeFile(metaPath,JSON.stringify({...meta,name},null,2)+'\n');
+    await writeFile(metaPath,JSON.stringify({...meta,name,...selectPalette(name)},null,2)+'\n');
     const pkgPath=join(actualTarget,'package.json');
     const pkg=JSON.parse(await readFile(pkgPath,'utf8')); pkg.name=name.toLowerCase();
     await writeFile(pkgPath,JSON.stringify(pkg,null,2)+'\n');
     const lockPath=join(actualTarget,'package-lock.json');
     try {const lock=JSON.parse(await readFile(lockPath,'utf8'));lock.name=pkg.name;if(lock.packages?.[''])lock.packages[''].name=pkg.name;await writeFile(lockPath,JSON.stringify(lock,null,2)+'\n');}catch(e){if(e.code!=='ENOENT')throw e;}
     await writeFile(join(actualTarget,'README.md'),'# '+name+'\n\nOps Universe project — Developer Preview. Generated from a local template. Replace this introduction with the actual business problem, architecture, quick start and evidence.\n\nRun npm ci and npm test. See AGENTS.md and ROADMAP.md.\n');
-    return {destination:actualTarget,name};
+    return {destination:actualTarget,name,...selectPalette(name)};
   } catch(e) { await rm(actualTarget,{recursive:true,force:true}); throw e; }
 }
