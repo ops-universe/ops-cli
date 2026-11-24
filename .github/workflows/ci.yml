@@ -14,3 +14,19 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npm test
+  integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: ops-universe/ops-template
+          ref: a8dc9e7f1a343834c416b028d4e395be2d9ab1ba
+          path: integration-template
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/e2e.mjs integration-template

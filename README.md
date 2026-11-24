@@ -18,3 +18,7 @@ Branding: registered project names automatically select their own palette. Unreg
 ## Preview and generated branding
 
 Append `--dry-run` to init for a read-only manifest of files, planned changes and branding status. The actual init generates deterministic SVG favicon and wordmark plus project-specific HTML title, description and Open Graph title/description for supported website templates. Unknown projects use provisional Universe colors and remain pending registration. No canonical URL or social image URL is guessed. Review the manifest and generated assets before publishing.
+
+## Integration verification
+
+`node src/cli.mjs audit ../evalOps` reports six evidence-based scaffolding checks and fails if any are blocked. `node scripts/e2e.mjs ../ops-template` generates a disposable evalOps, checks metadata, runs root tests and builds the website with a project Pages base. CI uses an immutable reviewed template commit. Website dependency installation still uses npm install until its lockfile is committed; this is not release certification. Only run integration checks against trusted templates because they execute npm scripts.
