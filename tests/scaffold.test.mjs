@@ -12,3 +12,6 @@ test('symlink denied',async t=>{const f=await fixture(t);await symlink(join(f.te
 test('secret and git metadata excluded',async t=>{const f=await fixture(t);await writeFile(join(f.template,'.env'),'SECRET');await mkdir(join(f.template,'.git'));await init(f);await assert.rejects(readFile(join(f.dest,'.env')),{code:'ENOENT'});await assert.rejects(readFile(join(f.dest,'.git')),{code:'ENOENT'});});
 test('missing mandatory file reported',async t=>{const f=await fixture(t);await rm(join(f.template,'LICENSE'));assert.deepEqual((await validate(f.template)).missing,['LICENSE']);await assert.rejects(init(f),/Incomplete template/);});
 test('nested destination denied',async t=>{const f=await fixture(t);await assert.rejects(init({...f,dest:join(f.template,'nested')}),/outside template/);});
+
+test('registered palette selected from project name',async t=>{const f=await fixture(t);const out=await init(f);assert.equal(out.palette,'evalops');assert.equal(out.paletteStatus,'registered');const m=JSON.parse(await readFile(join(f.dest,'.ops/project.json'),'utf8'));assert.equal(m.palette,'evalops');});
+test('unregistered project requires unique palette registration',async t=>{const f=await fixture(t);const out=await init({...f,name:'newOps'});assert.equal(out.palette,'newops');assert.equal(out.paletteStatus,'pending-registration');});

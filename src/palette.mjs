@@ -1,0 +1,2 @@
+const known=new Set(["universe","repoops","jobsops","dailytoolsops","evalops","guardops","deployops","dataops","integrationops","mcpops","workflowops","ragops","traceops","documentops","harnessops","ops-template","ops-ui","ops-cli","ops-standards"]);
+export function selectPalette(name){const key=name.toLowerCase();return known.has(key)?{palette:key,paletteStatus:'registered'}:{palette:key,paletteStatus:'pending-registration'};}
