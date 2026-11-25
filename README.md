@@ -22,3 +22,14 @@ Append `--dry-run` to init for a read-only manifest of files, planned changes an
 ## Integration verification
 
 `node src/cli.mjs audit ../evalOps` reports seven evidence-based scaffolding checks and fails if any are blocked. `node scripts/e2e.mjs ../ops-template` generates a disposable evalOps, checks metadata, runs root tests and builds the website with a project Pages base. CI uses an immutable reviewed template commit. Root and website installs use committed lockfiles and npm ci. Website audit rejects high or critical findings. This is not release certification. Only run integration checks against trusted templates because they execute npm scripts.
+
+## Native workspace snapshots
+
+For explicitly trusted local sibling repositories on Linux/macOS, with Git installed:
+
+```sh
+node src/cli.mjs snapshot create /path/to/workspace evalOps guardOps > /tmp/ops-snapshot.json
+node src/cli.mjs snapshot verify /path/to/workspace /tmp/ops-snapshot.json
+```
+
+The commands emit deterministic JSON, require clean tracked/untracked worktrees and compare exact HEAD commits. They never fetch, checkout, commit, push, restore or install anything. Use a trusted local root, Git binary, repository config and manifest parent directory; this is not a filesystem sandbox, a signed manifest, remote provenance verification, or an atomic multi-repository transaction. Ignored files and external dependencies are not captured. Keep concurrent writers out of the workspace. The manifest is limited to 100 repository names and 1 MiB; keep it outside the captured repositories. No VMN dependency is introduced.
