@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { capture, verify, readManifest } from '../src/snapshot.mjs';
+import { capture, verify, readManifest, doctor } from '../src/snapshot.mjs';
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'ops-snapshot-'));
@@ -83,4 +83,31 @@ test('CLI create and verify round trip and nonzero failure', t => {
   assert.deepEqual(JSON.parse(run('snapshot','verify',root,file)), JSON.parse(manifest));
   writeFileSync(join(root,'alpha','data.txt'),'modified');
   assert.throws(() => run('snapshot','verify',root,file), /dirty/);
+});
+
+test('doctor aggregates readiness without exposing file contents', t => {
+  const {root,git} = fixture(t);
+  assert.equal(doctor(root,['alpha','beta']).ok,true);
+  writeFileSync(join(root,'alpha','private-name.txt'),'synthetic secret');
+  git('beta','checkout','--detach','HEAD');
+  const result=doctor(root,['missing','beta','alpha']);
+  assert.equal(result.ok,false);
+  assert.deepEqual(result.repositories.map(r=>[r.name,r.blockers]),[
+    ['alpha',['dirty-worktree']],['beta',['detached-head']],['missing',['inspection-failed']]
+  ]);
+  assert.equal(result.repositories[1].branch,null);
+  assert.equal(result.repositories[2].sha,null);
+  assert.ok(!JSON.stringify(result).includes('private-name'));
+  assert.throws(()=>doctor(root,['../alpha']),/invalid/);
+});
+test('doctor CLI exits nonzero and keeps structured diagnostics', t => {
+  const {root} = fixture(t);
+  const cli = new URL('../src/cli.mjs', import.meta.url);
+  try {
+    execFileSync(process.execPath,[decodeURIComponent(cli.pathname),'workspace','doctor',root,'alpha','missing'],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
+    assert.fail('expected nonzero exit');
+  } catch(e) {
+    assert.equal(e.status,1);
+    assert.equal(JSON.parse(e.stdout).ok,false);
+  }
 });
