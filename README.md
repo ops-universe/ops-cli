@@ -33,3 +33,7 @@ node src/cli.mjs snapshot verify /path/to/workspace /tmp/ops-snapshot.json
 ```
 
 The commands emit deterministic JSON, require clean tracked/untracked worktrees and compare exact HEAD commits. They never fetch, checkout, commit, push, restore or install anything. Use a trusted local root, Git binary, repository config and manifest parent directory; this is not a filesystem sandbox, a signed manifest, remote provenance verification, or an atomic multi-repository transaction. Ignored files and external dependencies are not captured. Keep concurrent writers out of the workspace. The manifest is limited to 100 repository names and 1 MiB; keep it outside the captured repositories. No VMN dependency is introduced.
+
+## Workspace readiness
+
+`node src/cli.mjs workspace doctor /path/to/workspace evalOps guardOps` reports each explicitly named repository's HEAD, branch and dirty state, and exits nonzero if any repository is missing, invalid, dirty or detached. Inspection errors are summarized without emitting raw Git errors or filenames. A ready result only means this local structural preflight passed; it does not establish remote repository identity, upstream freshness, unpushed work, environment dependencies, permissions or security. Same trusted-root and Git assumptions as snapshots. No automatic fixes.

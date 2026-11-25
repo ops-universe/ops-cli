@@ -22,7 +22,7 @@ function git(cwd, args) {
   }).trim();
 }
 
-function state(root, name) {
+function inspectState(root, name) {
   if (typeof name !== 'string' || !safeName.test(name)) throw Error('invalid repository name');
   const path = join(root, name);
   const stat = lstatSync(path);
@@ -33,19 +33,46 @@ function state(root, name) {
     throw Error(name + ': not a repository root');
   const sha = git(cwd, ['rev-parse', '--verify', 'HEAD^{commit}']);
   if (!fullSha.test(sha)) throw Error(name + ': invalid commit');
-  if (git(cwd, ['status', '--porcelain=v1', '--untracked-files=all', '--ignore-submodules=none']))
-    throw Error(name + ': dirty working tree');
+  const branch = git(cwd, ['rev-parse', '--abbrev-ref', 'HEAD']);
+  const dirty = Boolean(git(cwd, ['status', '--porcelain=v1', '--untracked-files=all', '--ignore-submodules=none']));
   if (git(cwd, ['rev-parse', '--verify', 'HEAD^{commit}']) !== sha)
     throw Error(name + ': HEAD changed during inspection');
-  return { name, sha };
+  return { name, sha, branch: branch === 'HEAD' ? null : branch, dirty };
+}
+
+function state(root, name) {
+  const item = inspectState(root, name);
+  if (item.dirty) throw Error(name + ': dirty working tree');
+  return { name, sha: item.sha };
+}
+
+function checkedNames(names) {
+  if (!Array.isArray(names) || names.length === 0 || names.length > MAX_REPOS ||
+      names.some(n => typeof n !== 'string' || !safeName.test(n)) ||
+      new Set(names).size !== names.length) throw Error('invalid repository list');
+  return [...names].sort();
 }
 
 export function capture(root, names) {
   root = realpathSync(resolve(root));
-  if (!Array.isArray(names) || names.length === 0 || names.length > MAX_REPOS ||
-      names.some(n => typeof n !== 'string' || !safeName.test(n)) ||
-      new Set(names).size !== names.length) throw Error('invalid repository list');
-  return { schemaVersion: '0.1.0', repositories: [...names].sort().map(name => state(root, name)) };
+  return { schemaVersion: '0.1.0', repositories: checkedNames(names).map(name => state(root, name)) };
+}
+
+export function doctor(root, names) {
+  root = realpathSync(resolve(root));
+  const repositories = checkedNames(names).map(name => {
+    try {
+      const item = inspectState(root, name);
+      const blockers = [];
+      if (item.dirty) blockers.push('dirty-worktree');
+      if (item.branch === null) blockers.push('detached-head');
+      return { ...item, ready: blockers.length === 0, blockers };
+    } catch {
+      // Do not emit subprocess errors, local paths or repository configuration.
+      return { name, sha: null, branch: null, dirty: null, ready: false, blockers: ['inspection-failed'] };
+    }
+  });
+  return { schemaVersion: '0.1.0', ok: repositories.every(r => r.ready), repositories };
 }
 
 export function verify(root, snapshot) {
